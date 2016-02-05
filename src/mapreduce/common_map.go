@@ -19,16 +19,19 @@ func doMap(
 	mapF func(file string, contents string) []KeyValue,
 ) {
 
-	fileContents, err := ioutil.ReadFile(inFile);// can be too large
+	fileContents, err := ioutil.ReadFile(inFile);// cant be too large
 	// inputFile = os.Open(inFile);
 	if(err != nil){
 		fmt.Println("read file failed");
 	}
 	res := mapF(inFile, string(fileContents));
 	totalNum := len(res);
+
 	eachNum := totalNum / nReduce;
 	totalCount := 0;
+	reduceCount := 0;
 	for i := 0; i < nReduce; i++{
+
 		//create file
 		intermidiateName := reduceName(jobName, mapTaskNumber, i);
 		f, f_err := os.Create(intermidiateName);
@@ -38,7 +41,8 @@ func doMap(
 		//write to file
 		enc := json.NewEncoder(f);
 		count := 0;
-		for kv := res[totalCount]; count < eachNum && totalCount < totalNum; {
+		for ; count < eachNum && totalCount < totalNum; {
+			kv := res[totalCount]
 			err := enc.Encode(&kv)
 			if err != nil{
 				fmt.Println(err);
@@ -46,8 +50,21 @@ func doMap(
 			totalCount++;
 			count++;
 		}
+		if reduceCount == nReduce - 1{
+			for totalCount < totalNum{
+				kv := res[totalCount]
+				err := enc.Encode(&kv)
+				if err != nil{
+					fmt.Println(err);
+				}
+				totalCount++;
+			}	
+		}	
 		f.Close();
+		reduceCount++;
 	}
+
+
 
 	
 

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"strings"
 	"os"
+	"strconv"
 )
 // doReduce does the job of a reduce worker: it reads the intermediate
 // key/value pairs (produced by the map phase) for this task, sorts the
@@ -18,15 +19,26 @@ func quickSort(array []KeyValue, left int, right int){
 	}
 	tmp := array[left].Key;
 	tmp_value := array[left].Value;
+	convTmp, _ := strconv.Atoi(tmp);
 	low := left;
 	high := right;
+	compareArray := make([]int, len(array))
+	for i:=0; i < len(array);i++{
+		compareArray[i], _ = strconv.Atoi(array[i].Key);
+	}
 	for low < high{
-		for strings.Compare(array[high].Key, tmp) >= 0 && low < high{
+		for low < high{
+			if compareArray[high] < convTmp{
+				break
+			}
 			high--;
 		}
 			array[low].Key = array[high].Key;
 			array[low].Value = array[high].Value;
-		for strings.Compare(array[low].Key, tmp) <= 0 && low < high{
+		for low < high{
+			if compareArray[low] > convTmp{
+				break
+			}
 			low++;
 		}
 			array[high].Key = array[low].Key;
@@ -59,11 +71,11 @@ func doReduce(
 		enc := json.NewDecoder(f)
 		var kv KeyValue;
 		for err := enc.Decode(&kv); err == nil; {
-			err = enc.Decode(&kv);
 			array = append(array, kv);
+			err = enc.Decode(&kv);
 		}
 	}
-
+		test := make([]int, 100000);
 
 		var valueSet []string;
 		num := len(array);
@@ -74,32 +86,37 @@ func doReduce(
 		}
 		outEnc := json.NewEncoder(fo);
 		if len(array) < 1{
-			fmt.Println("no input at all");
+			fmt.Println("EMPTY FILE");
 		}
-		quick(array);
-		
+		// quick(array);
+		fmt.Println("length is ", len(array));
 		count := 0;
-		// for current := array[count].Key; count < num; count++{
-		// 	valueSet = append(valueSet, )
-		// 	outEnc.Encode(KeyValue{Key:key, Value:reduceF(key, valueSet)});
-		// }
 		for count < num {
-			current := array[count].Key
+			key := array[count].Key
 			interval := 0;
-			key := array[count + interval].Key;
-			for next := array[count + interval].Value; strings.Compare(next, current) == 0 ;{
-				valueSet = append(valueSet, next)
+			for next := array[count + interval]; strings.Compare(next.Key, key) == 0 ;{
+				valueSet = append(valueSet, next.Value)
+				tt, _ := strconv.Atoi(next.Key);
+				fmt.Println("!!!!!!!!!!--", count + interval, " !! ", array[count + interval]);
+				test[tt] = 1;
 				interval++;
 				if count + interval == num{
 					break;
 				}
-				next = array[count + interval].Value
+				next = array[count + interval]
 			}
 			count += interval;
 			outEnc.Encode(KeyValue{Key:key, Value:reduceF(key, valueSet)});
-			valueSet = nil;
+			valueSet = nil;	
 		}
+		kkk := 0;
+		for kk := 0; kk < 100000; kk++{
+			if test[kk] != 1{
+				kkk++;
+			}
 
+		}
+		fmt.Println("count is ", count)
 		fo.Close();
 	
 	// TODO:
