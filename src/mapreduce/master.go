@@ -43,6 +43,14 @@ func newMaster(master string) (mr *Master) {
 	return
 }
 
+//mr = mapreduce.Sequential("wcseq", os.Args[3:], 3, mapF, reduceF)
+// func doMap(
+// 	jobName string, // the name of the MapReduce job
+// 	mapTaskNumber int, // which map task this is
+// 	inFile string,
+// 	nReduce int, // the number of reduce task that will be run ("R" in the paper)
+// 	mapF func(file string, contents string) []KeyValue,
+// )
 // Sequential runs map and reduce tasks sequentially, waiting for each task to
 // complete before scheduling the next.
 func Sequential(jobName string, files []string, nreduce int,
@@ -72,6 +80,7 @@ func Sequential(jobName string, files []string, nreduce int,
 func Distributed(jobName string, files []string, nreduce int, master string) (mr *Master) {
 	mr = newMaster(master)
 	mr.startRPCServer()
+	fmt.Println("enter Distributed");
 	go mr.run(jobName, files, nreduce, mr.schedule, func() {
 		mr.stats = mr.killWorkers()
 		mr.stopRPCServer()
