@@ -22,13 +22,15 @@ func quickSort(array []KeyValue, left int, right int){
 	convTmp, _ := strconv.Atoi(tmp);
 	low := left;
 	high := right;
-	compareArray := make([]int, len(array))
-	for i:=0; i < len(array);i++{
-		compareArray[i], _ = strconv.Atoi(array[i].Key);
-	}
+
+	// compareArray := make([]int, len(array))
+	// for i:=0; i < len(array);i++{
+	// 	compareArray[i], _ = strconv.Atoi(array[i].Key);
+	// }
 	for low < high{
 		for low < high{
-			if compareArray[high] < convTmp{
+			p, _ := strconv.Atoi(array[high].Key) 
+			if p < convTmp{
 				break
 			}
 			high--;
@@ -36,7 +38,8 @@ func quickSort(array []KeyValue, left int, right int){
 			array[low].Key = array[high].Key;
 			array[low].Value = array[high].Value;
 		for low < high{
-			if compareArray[low] > convTmp{
+			q, _ := strconv.Atoi(array[low].Key)
+			if q > convTmp {
 				break
 			}
 			low++;
@@ -88,7 +91,7 @@ func doReduce(
 		if len(array) < 1{
 			fmt.Println("EMPTY FILE");
 		}
-		// quick(array);
+		quick(array);
 		fmt.Println("length is ", len(array));
 		count := 0;
 		for count < num {
@@ -97,7 +100,6 @@ func doReduce(
 			for next := array[count + interval]; strings.Compare(next.Key, key) == 0 ;{
 				valueSet = append(valueSet, next.Value)
 				tt, _ := strconv.Atoi(next.Key);
-				fmt.Println("!!!!!!!!!!--", count + interval, " !! ", array[count + interval]);
 				test[tt] = 1;
 				interval++;
 				if count + interval == num{
