@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"strings"
 	"os"
-	"strconv"
+	//"strconv"
 )
 // doReduce does the job of a reduce worker: it reads the intermediate
 // key/value pairs (produced by the map phase) for this task, sorts the
@@ -13,35 +13,58 @@ import (
 // (reduceF) for each key, and writes the output to disk.
 
 
+// func quickSort(array []KeyValue, left int, right int){
+// 	if left >= right{
+// 		return;
+// 	}
+// 	tmp := array[left].Key;
+// 	tmp_value := array[left].Value;
+// 	convTmp, _ := strconv.Atoi(tmp);
+// 	low := left;
+// 	high := right;
+// 	for low < high{
+// 		for low < high{
+// 			p, _ := strconv.Atoi(array[high].Key) 
+// 			if p < convTmp{
+// 				break
+// 			}
+// 			high--;
+// 		}
+// 			array[low].Key = array[high].Key;
+// 			array[low].Value = array[high].Value;
+// 		for low < high{
+// 			q, _ := strconv.Atoi(array[low].Key)
+// 			if q > convTmp {
+// 				break
+// 			}
+// 			low++;
+// 		}
+// 			array[high].Key = array[low].Key;
+// 			array[high].Value = array[low].Value;
+// 	}
+// 	array[low].Key = tmp;
+// 	array[low].Value = tmp_value;
+// 	quickSort(array, left, low - 1);
+// 	quickSort(array, low + 1, right);
+// }
+var global_count int;
 func quickSort(array []KeyValue, left int, right int){
 	if left >= right{
 		return;
 	}
+	// global_count++;
+	// fmt.Println(global_count);
 	tmp := array[left].Key;
 	tmp_value := array[left].Value;
-	convTmp, _ := strconv.Atoi(tmp);
 	low := left;
 	high := right;
-
-	// compareArray := make([]int, len(array))
-	// for i:=0; i < len(array);i++{
-	// 	compareArray[i], _ = strconv.Atoi(array[i].Key);
-	// }
 	for low < high{
-		for low < high{
-			p, _ := strconv.Atoi(array[high].Key) 
-			if p < convTmp{
-				break
-			}
+		for low < high && array[high].Key >= tmp{
 			high--;
 		}
 			array[low].Key = array[high].Key;
 			array[low].Value = array[high].Value;
-		for low < high{
-			q, _ := strconv.Atoi(array[low].Key)
-			if q > convTmp {
-				break
-			}
+		for  low < high && array[low].Key <= tmp{
 			low++;
 		}
 			array[high].Key = array[low].Key;
@@ -52,6 +75,8 @@ func quickSort(array []KeyValue, left int, right int){
 	quickSort(array, left, low - 1);
 	quickSort(array, low + 1, right);
 }
+
+
 func quick(array []KeyValue){
 	quickSort(array, 0, len(array) - 1);
 }
@@ -78,7 +103,6 @@ func doReduce(
 			err = enc.Decode(&kv);
 		}
 	}
-		test := make([]int, 100000);
 
 		var valueSet []string;
 		num := len(array);
@@ -91,16 +115,15 @@ func doReduce(
 		if len(array) < 1{
 			fmt.Println("EMPTY FILE");
 		}
+
 		quick(array);
-		fmt.Println("length is ", len(array));
+
 		count := 0;
 		for count < num {
 			key := array[count].Key
 			interval := 0;
 			for next := array[count + interval]; strings.Compare(next.Key, key) == 0 ;{
 				valueSet = append(valueSet, next.Value)
-				tt, _ := strconv.Atoi(next.Key);
-				test[tt] = 1;
 				interval++;
 				if count + interval == num{
 					break;
@@ -109,16 +132,12 @@ func doReduce(
 			}
 			count += interval;
 			outEnc.Encode(KeyValue{Key:key, Value:reduceF(key, valueSet)});
-			valueSet = nil;	
-		}
-		kkk := 0;
-		for kk := 0; kk < 100000; kk++{
-			if test[kk] != 1{
-				kkk++;
+			if strings.Compare(key, "the") == 0{
+				fmt.Println(reduceF(key, valueSet), "      ", reduceTaskNumber)
 			}
+			valueSet = nil;	
 
 		}
-		fmt.Println("count is ", count)
 		fo.Close();
 	
 	// TODO:

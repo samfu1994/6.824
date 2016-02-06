@@ -7,13 +7,53 @@ import (
 	"log"
 	"os"
 	"sort"
+	"strconv"
 )
 
 // merge combines the results of the many reduce jobs into a single output file
 // XXX use merge sort
+// func (mr *Master) merge() {
+// 	debug("Merge phase")
+// 	kvs := make(map[string]string)
+// 	for i := 0; i < mr.nReduce; i++ {
+// 		p := mergeName(mr.jobName, i)
+// 		fmt.Printf("Merge: read %s\n", p)
+// 		file, err := os.Open(p)
+// 		if err != nil {
+// 			log.Fatal("Merge: ", err)
+// 		}
+// 		dec := json.NewDecoder(file)
+// 		for {
+// 			var kv KeyValue
+// 			err = dec.Decode(&kv)
+// 			if err != nil {
+// 				break
+// 			}
+// 			kvs[kv.Key] = kv.Value
+// 		}
+// 		file.Close()
+// 	}
+// 	var keys []string
+// 	for k := range kvs {
+// 		keys = append(keys, k)
+// 	}
+// 	sort.Strings(keys)
+
+// 	file, err := os.Create("mrtmp." + mr.jobName)
+// 	if err != nil {
+// 		log.Fatal("Merge: create ", err)
+// 	}
+// 	w := bufio.NewWriter(file)
+// 	for _, k := range keys {
+// 		fmt.Fprintf(w, "%s: %s\n", k, kvs[k])
+// 	}
+// 	w.Flush()
+// 	file.Close()
+// }
+
 func (mr *Master) merge() {
 	debug("Merge phase")
-	kvs := make(map[string]string)
+	kvs := make(map[string]int)
 	for i := 0; i < mr.nReduce; i++ {
 		p := mergeName(mr.jobName, i)
 		fmt.Printf("Merge: read %s\n", p)
@@ -28,7 +68,8 @@ func (mr *Master) merge() {
 			if err != nil {
 				break
 			}
-			kvs[kv.Key] = kv.Value
+			tmp, _ := strconv.Atoi(kv.Value)
+			kvs[kv.Key] += tmp
 		}
 		file.Close()
 	}
@@ -44,11 +85,13 @@ func (mr *Master) merge() {
 	}
 	w := bufio.NewWriter(file)
 	for _, k := range keys {
-		fmt.Fprintf(w, "%s: %s\n", k, kvs[k])
+		fmt.Fprintf(w, "%s: %s\n", k, strconv.Itoa(kvs[k]))
 	}
 	w.Flush()
 	file.Close()
 }
+
+
 
 // removeFile is a simple wrapper around os.Remove that logs errors.
 func removeFile(n string) {
